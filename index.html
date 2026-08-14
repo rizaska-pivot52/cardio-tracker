@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0B0F19">
+    <meta name="description" content="CardioTracker 21K — BTN Jakarta Marathon Endurance Roadmap">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CardioTracker">
+
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon-192.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/js/all.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                    },
+                    colors: {
+                        darkbg: '#0B0F19',
+                        cardbg: '#151D2A',
+                        cardborder: '#222E42',
+                        brandcyan: '#06B6D4',
+                        brandemerald: '#10B981',
+                        brandrose: '#F43F5E',
+                        brandamber: '#F59E0B',
+                        brandpurple: '#8B5CF6'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0B0F19;
+            color: #F3F4F6;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(21, 29, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(34, 46, 66, 0.8);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0B0F19;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #222E42;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #06B6D4;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+
+
+
+
+
+<!-- NAVBAR HEADER -->
+<header class="sticky top-0 z-40 glass-panel border-b border-cardborder/80 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-gradient-to-tr from-cyan-500 to-emerald-500 text-slate-950 rounded-xl font-bold shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-heart-pulse text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                    CardioTracker <span class="text-xs font-semibold px-2 py-0.5 rounded-md bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">Target 21K</span>
+                </h1>
+                <p class="text-xs text-slate-400">BTN Jakarta Marathon Endurance Roadmap</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button onclick="openModal()" class="px-4 py-2 bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-slate-950 font-bold rounded-xl text-xs md:text-sm shadow-lg shadow-cyan-500/20 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-plus text-sm"></i> Sesi Baru
+            </button>
+
+            <button id="install-app-btn" onclick="installPWA()" title="Install CardioTracker ke Home Screen"
+                    class="hidden p-2.5 bg-cardbg hover:bg-slate-800 border border-cyan-500/30 text-cyan-400 rounded-xl text-xs transition-all">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+            </button>
+            <button onclick="exportData()" title="Ekspor Data JSON" class="p-2.5 bg-cardbg hover:bg-slate-800 border border-cardborder text-slate-300 rounded-xl text-xs transition-all">
+                <i class="fa-solid fa-download"></i>
+            </button>
+            <button onclick="resetData()" title="Reset ke Data Awal" class="p-2.5 bg-cardbg hover:bg-rose-900/30 border border-rose-900/50 text-rose-400 hover:text-rose-300 rounded-xl text-xs transition-all">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+<!-- MAIN CONTAINER -->
+<main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-8">
+
+    <!-- CATEGORY TAB SELECTOR -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-cardbg/80 p-2 rounded-2xl border border-cardborder">
+        <div class="flex flex-wrap gap-1.5 w-full sm:w-auto">
+            <button onclick="setCategoryFilter('ALL')" id="tab-ALL" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-cyan-500 text-slate-950 shadow-md">
+                <i class="fa-solid fa-cubes mr-1.5"></i> Semua Sesi
+            </button>
+            <button onclick="setCategoryFilter('STEADY')" id="tab-STEADY" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-transparent text-slate-400 hover:text-white hover:bg-slate-800/60">
+                <i class="fa-solid fa-shield-halved text-emerald-400 mr-1.5"></i> Steady Base
+            </button>
+            <button onclick="setCategoryFilter('TEMPO')" id="tab-TEMPO" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-transparent text-slate-400 hover:text-white hover:bg-slate-800/60">
+                <i class="fa-solid fa-bolt text-rose-400 mr-1.5"></i> Tempo Zone
+            </button>
+            <button onclick="setCategoryFilter('LONG')" id="tab-LONG" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-transparent text-slate-400 hover:text-white hover:bg-slate-800/60">
+                <i class="fa-solid fa-mountain text-amber-400 mr-1.5"></i> Long Endurance
+            </button>
+        </div>
+
+        <div class="text-xs text-slate-400 px-3 py-1 bg-slate-900/50 rounded-lg border border-cardborder/50 self-end sm:self-auto">
+            Total Tercatat: <span id="total-session-count" class="font-bold text-cyan-400">0</span> Sesi
+        </div>
+    </div>
+
+    <!-- SUMMARY CARDS HUD -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1 -->
+        <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-emerald-500/50 transition-all">
+            <div class="absolute top-0 right-0 p-6 text-emerald-500/10 group-hover:text-emerald-500/20 transition-all text-6xl font-black">
+                <i class="fa-solid fa-heart-pulse"></i>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Efisiensi Steady Base</p>
+            <div class="flex items-baseline gap-2 mt-2">
+                <h2 class="text-2xl lg:text-3xl font-black text-emerald-400" id="card-steady-hr">123 bpm</h2>
+                <span class="text-xs text-slate-400">@ 5.3 km/h</span>
+            </div>
+            <p class="text-[11px] text-emerald-400/90 mt-2 flex items-center gap-1 font-medium">
+                <i class="fa-solid fa-arrow-down text-xs"></i> -4 bpm dari baseline awal
+            </p>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-cyan-500/50 transition-all">
+            <div class="absolute top-0 right-0 p-6 text-cyan-500/10 group-hover:text-cyan-500/20 transition-all text-6xl font-black">
+                <i class="fa-solid fa-gauge-high"></i>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Record Peak Tempo</p>
+            <div class="flex items-baseline gap-2 mt-2">
+                <h2 class="text-2xl lg:text-3xl font-black text-cyan-400" id="card-tempo-peak">6.2 km/h</h2>
+                <span class="text-xs text-slate-400">Avg 5.8 km/h</span>
+            </div>
+            <p class="text-[11px] text-cyan-400/90 mt-2 flex items-center gap-1 font-medium">
+                <i class="fa-solid fa-person-running text-xs"></i> Cadence Puncak 149 spm
+            </p>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-amber-500/50 transition-all">
+            <div class="absolute top-0 right-0 p-6 text-amber-500/10 group-hover:text-amber-500/20 transition-all text-6xl font-black">
+                <i class="fa-solid fa-stopwatch"></i>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Rekor Long Endurance</p>
+            <div class="flex items-baseline gap-2 mt-2">
+                <h2 class="text-2xl lg:text-3xl font-black text-amber-400" id="card-long-dur">70 Mnt</h2>
+                <span class="text-xs text-slate-400">Pace 5.1 km/h</span>
+            </div>
+            <p class="text-[11px] text-amber-400/90 mt-2 flex items-center gap-1 font-medium">
+                <i class="fa-solid fa-circle-check text-xs"></i> Jantung stabil di 126 bpm
+            </p>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="glass-panel p-5 rounded-2xl relative overflow-hidden group hover:border-purple-500/50 transition-all">
+            <div class="absolute top-0 right-0 p-6 text-purple-500/10 group-hover:text-purple-500/20 transition-all text-6xl font-black">
+                <i class="fa-solid fa-bullseye"></i>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Skor Kesiapan 21K</p>
+            <div class="flex items-baseline gap-2 mt-2">
+                <h2 class="text-2xl lg:text-3xl font-black text-purple-400" id="card-readiness">78 %</h2>
+                <span class="text-xs text-slate-400">On Track</span>
+            </div>
+            <p class="text-[11px] text-purple-400/90 mt-2 flex items-center gap-1 font-medium">
+                <i class="fa-solid fa-chart-line text-xs"></i> Fondasi Aerobik Solid
+            </p>
+        </div>
+    </div>
+
+    <!-- CHARTS SECTION -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Chart 1: Speed vs Heart Rate -->
+        <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-cyan-400"></i> Kecepatan vs Heart Rate
+                    </h3>
+                    <p class="text-xs text-slate-400">Indikator Efisiensi: Kecepatan meningkat, Heart Rate tetap terukur</p>
+                </div>
+                <span class="text-[11px] px-2.5 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-lg">Dual Axis</span>
+            </div>
+            <div class="relative h-72 sm:h-80 w-full">
+                <canvas id="speedHrChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Chart 2: Duration & Cadence -->
+        <div class="glass-panel p-6 rounded-2xl space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch text-amber-400"></i> Durasi Latihan & Kadensi Langkah
+                    </h3>
+                    <p class="text-xs text-slate-400">Volume Waktu Nonstop (Menit) & Efisiensi Langkah (spm)</p>
+                </div>
+                <span class="text-[11px] px-2.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg">Bar + Line</span>
+            </div>
+            <div class="relative h-72 sm:h-80 w-full">
+                <canvas id="durationCadenceChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI COACH INSIGHT & ROADMAP ANALYSIS -->
+    <div class="glass-panel p-6 rounded-2xl border-l-4 border-l-cyan-500 relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
+                <i class="fa-solid fa-robot text-lg"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-white text-base">Evaluasi AI Coach & Analisis Performa 21K</h3>
+                <p class="text-xs text-slate-400">Rangkuman tren otomatis berdasarkan seluruh log sesi Anda</p>
+            </div>
+        </div>
+
+        <div id="ai-coach-content" class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <!-- Content generated via JavaScript -->
+        </div>
+    </div>
+
+    <!-- DETAILED DATA TABLE -->
+    <div class="glass-panel rounded-2xl p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h3 class="font-extrabold text-lg text-white flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-emerald-400"></i> Tabel Log Sesi Latihan
+                </h3>
+                <p class="text-xs text-slate-400">Riwayat data performa individual beserta metrik utama</p>
+            </div>
+
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <div class="relative flex-1 sm:w-64">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="Cari file / catatan..." class="w-full bg-slate-900 border border-cardborder rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500">
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                    <tr class="bg-slate-900/80 text-slate-400 uppercase tracking-wider text-[11px] border-b border-cardborder">
+                        <th class="p-3">Kategori</th>
+                        <th class="p-3">Nama Sesi / ID File</th>
+                        <th class="p-3">Durasi</th>
+                        <th class="p-3">Avg Speed</th>
+                        <th class="p-3">Peak Speed</th>
+                        <th class="p-3">Avg HR</th>
+                        <th class="p-3">Max HR</th>
+                        <th class="p-3">Avg Cadence</th>
+                        <th class="p-3">Status Zona</th>
+                        <th class="p-3 text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="session-table-body" class="divide-y divide-cardborder/60 text-slate-300">
+                    <!-- Table rows generated by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="border-t border-cardborder/80 py-6 px-4 text-center text-xs text-slate-500 mt-auto">
+    <p>21K Endurance Performance Tracker &bull; Didesain khusus untuk memantau progres Latihan Treadmill</p>
+</footer>
+
+<!-- ADD SESSION MODAL -->
+<div id="session-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="glass-panel max-w-lg w-full rounded-2xl p-6 border border-cardborder shadow-2xl space-y-5 animate-in fade-in zoom-in duration-200">
+        <div class="flex justify-between items-center border-b border-cardborder pb-4">
+            <h3 class="font-bold text-white text-base flex items-center gap-2">
+                <i class="fa-solid fa-plus-circle text-cyan-400"></i> Tambah Log Sesi Baru
+            </h3>
+            <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="add-session-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Kategori Latihan</label>
+                <select id="input-category" required class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                    <option value="STEADY">Steady Base (Zona 2)</option>
+                    <option value="TEMPO">Tempo Zone (Threshold)</option>
+                    <option value="LONG">Long Endurance (Volume 21K)</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Nama / Judul Sesi</label>
+                    <input type="text" id="input-title" required placeholder="mis: Steady Base 8" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">ID File / Gambar</label>
+                    <input type="text" id="input-file" placeholder="mis: 242000.jpg" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Durasi (Menit)</label>
+                    <input type="number" id="input-duration" required step="1" min="1" placeholder="45" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Avg Speed (km/h)</label>
+                    <input type="number" id="input-avg-speed" required step="0.1" min="1" placeholder="5.3" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Peak Speed (km/h)</label>
+                    <input type="number" id="input-max-speed" required step="0.1" min="1" placeholder="6.2" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Avg Heart Rate (bpm)</label>
+                    <input type="number" id="input-avg-hr" required step="1" min="60" max="220" placeholder="123" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Max Heart Rate (bpm)</label>
+                    <input type="number" id="input-max-hr" required step="1" min="60" max="220" placeholder="140" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">Avg Cadence (spm)</label>
+                    <input type="number" id="input-cadence" required step="1" min="60" max="220" placeholder="112" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-300 mb-1">Catatan Tambahan (Opsional)</label>
+                <input type="text" id="input-note" placeholder="mis: Kecepatan dikunci di 5.5 km/h, nafas nyaman" class="w-full bg-slate-900 border border-cardborder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+            </div>
+
+            <div class="flex justify-end gap-3 pt-3 border-t border-cardborder">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold">
+                    Batal
+                </button>
+                <button type="submit" class="px-5 py-2 bg-gradient-to-r from-cyan-500 to-emerald-500 text-slate-950 font-bold rounded-xl text-xs shadow-lg shadow-cyan-500/20">
+                    Simpan Sesi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- APPLICATION SCRIPT LOGIC -->
+<script>
+    // MASTER INITIAL DATA ACCORDING TO USER HISTORY
+    const initialSessions = [
+        // STEADY BASE
+        { id: 1, category: 'STEADY', session: 'Steady Base 1', file: '227425.jpg', duration: 40, avgSpeed: 4.3, maxSpeed: 4.3, avgHr: 123, maxHr: 138, cadence: 100, note: 'Baseline Sesi Awalan' },
+        { id: 2, category: 'STEADY', session: 'Steady Base 2', file: '228636.jpg', duration: 45, avgSpeed: 4.7, maxSpeed: 5.0, avgHr: 124, maxHr: 141, cadence: 101, note: 'Stabilitas Terjaga' },
+        { id: 3, category: 'STEADY', session: 'Steady Base 3', file: '231230.jpg', duration: 40, avgSpeed: 4.8, maxSpeed: 5.2, avgHr: 119, maxHr: 135, cadence: 105, note: 'HR Rendah Rekor Baru' },
+        { id: 4, category: 'STEADY', session: 'Steady Base 4', file: '1784718753710.jpeg', duration: 45, avgSpeed: 5.2, maxSpeed: 5.5, avgHr: 121, maxHr: 138, cadence: 111, note: 'Step Up Speed 5.5 km/h' },
+        { id: 5, category: 'STEADY', session: 'Steady Base 5', file: '1785412761067.jpeg', duration: 45, avgSpeed: 5.3, maxSpeed: 5.6, avgHr: 126, maxHr: 143, cadence: 112, note: 'Progresif hingga 5.6 km/h' },
+        { id: 6, category: 'STEADY', session: 'Steady Base 6', file: '1785931701294.jpeg', duration: 45, avgSpeed: 5.3, maxSpeed: 5.5, avgHr: 119, maxHr: 133, cadence: 111, note: 'Rekor Efisiensi Aerobik' },
+        { id: 7, category: 'STEADY', session: 'Steady Base 7', file: '241348.jpg', duration: 45, avgSpeed: 5.3, maxSpeed: 6.6, avgHr: 123, maxHr: 140, cadence: 112, note: 'Recovery Pasca Tempo' },
+
+        // TEMPO
+        { id: 8, category: 'TEMPO', session: 'Tempo 1', file: '1783077101770.jpeg', duration: 32, avgSpeed: 5.0, maxSpeed: 5.4, avgHr: 141, maxHr: 161, cadence: 117, note: 'Adaptasi Zone 3' },
+        { id: 9, category: 'TEMPO', session: 'Tempo 2', file: '229345.jpg', duration: 35, avgSpeed: 5.0, maxSpeed: 5.5, avgHr: 148, maxHr: 172, cadence: 112, note: 'Max Speed 5.5 km/h' },
+        { id: 10, category: 'TEMPO', session: 'Tempo 3', file: '1784261035392.jpeg', duration: 42, avgSpeed: 4.7, maxSpeed: 6.0, avgHr: 124, maxHr: 167, cadence: 113, note: 'Sesi Hybrid Online Meet' },
+        { id: 11, category: 'TEMPO', session: 'Tempo 4', file: '1784866462730.jpeg', duration: 33, avgSpeed: 5.4, maxSpeed: 5.8, avgHr: 152, maxHr: 170, cadence: 120, note: 'Locked Speed 5.8 km/h' },
+        { id: 12, category: 'TEMPO', session: 'Tempo 5', file: '1786104036605.jpeg', duration: 36, avgSpeed: 5.4, maxSpeed: 6.2, avgHr: 154, maxHr: 173, cadence: 143, note: 'Locked Speed 6.2 km/h' },
+        { id: 13, category: 'TEMPO', session: 'Tempo 6', file: '1786707807929.jpeg', duration: 31, avgSpeed: 5.8, maxSpeed: 8.2, avgHr: 149, maxHr: 169, cadence: 149, note: 'Rekor Pace & Cadence Peak' },
+
+        // LONG ENDURANCE
+        { id: 14, category: 'LONG', session: 'Long Endurance 1', file: '224989.jpg', duration: 55, avgSpeed: 4.3, maxSpeed: 4.8, avgHr: 124, maxHr: 138, cadence: 99, note: 'Volume Awalan' },
+        { id: 15, category: 'LONG', session: 'Long Endurance 2', file: '227425.jpg', duration: 66, avgSpeed: 4.3, maxSpeed: 4.8, avgHr: 124, maxHr: 141, cadence: 101, note: 'Durasi Tembus >1 Jam' },
+        { id: 16, category: 'LONG', session: 'Long Endurance 3', file: '230070.jpg', duration: 66, avgSpeed: 4.7, maxSpeed: 5.0, avgHr: 126, maxHr: 142, cadence: 102, note: 'Locked Speed 5.0 km/h' },
+        { id: 17, category: 'LONG', session: 'Long Endurance 4', file: '1785048630336.jpeg', duration: 70, avgSpeed: 5.1, maxSpeed: 5.5, avgHr: 126, maxHr: 142, cadence: 109, note: 'Rekor Durasi 70 Mnt' }
+    ];
+
+    // STATE APP
+    let sessions = [];
+    let activeCategory = 'ALL';
+    let searchQuery = '';
+    let speedHrChartInstance = null;
+    let durationCadenceChartInstance = null;
+
+    // LOAD DATA STORAGE
+    function initData() {
+        const saved = localStorage.getItem('21k_cardio_sessions');
+        if (saved) {
+            try {
+                sessions = JSON.parse(saved);
+            } catch (e) {
+                sessions = [...initialSessions];
+            }
+        } else {
+            sessions = [...initialSessions];
+            saveToStorage();
+        }
+        refreshAppUI();
+    }
+
+    function saveToStorage() {
+        localStorage.setItem('21k_cardio_sessions', JSON.stringify(sessions));
+    }
+
+    function resetData() {
+        if (confirm('Kembalikan semua log data ke sesi awal default?')) {
+            sessions = [...initialSessions];
+            saveToStorage();
+            refreshAppUI();
+        }
+    }
+
+    function exportData() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(sessions, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `cardio_tracker_21k_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+    }
+
+    // FILTER & SEARCH HANDLERS
+    function setCategoryFilter(cat) {
+        activeCategory = cat;
+
+        ['ALL', 'STEADY', 'TEMPO', 'LONG'].forEach(c => {
+            const btn = document.getElementById(`tab-${c}`);
+            if (c === cat) {
+                btn.className = "flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-cyan-500 text-slate-950 shadow-md";
+            } else {
+                btn.className = "flex-1 sm:flex-none px-4 py-2.5 rounded-xl text-xs font-bold transition-all bg-transparent text-slate-400 hover:text-white hover:bg-slate-800/60";
+            }
+        });
+
+        refreshAppUI();
+    }
+
+    function handleSearch() {
+        searchQuery = document.getElementById('search-input').value.toLowerCase();
+        renderTable();
+    }
+
+    function getFilteredSessions() {
+        return sessions.filter(s => {
+            const matchCat = activeCategory === 'ALL' || s.category === activeCategory;
+            const matchSearch = s.session.toLowerCase().includes(searchQuery) || 
+                                (s.file && s.file.toLowerCase().includes(searchQuery)) ||
+                                (s.note && s.note.toLowerCase().includes(searchQuery));
+            return matchCat && matchSearch;
+        });
+    }
+
+    // CALCULATE ZONE STATUS
+    function getZoneStatus(session) {
+        if (session.category === 'STEADY') {
+            if (session.avgHr <= 125) return { text: 'Zona 2 Murni (Sangat Bagus)', color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' };
+            return { text: 'Zona 2-3', color: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/20' };
+        } else if (session.category === 'TEMPO') {
+            if (session.avgHr >= 150) return { text: 'Threshold / Zone 4 Peak', color: 'text-rose-400 bg-rose-500/10 border-rose-500/20' };
+            return { text: 'Zone 3 Tempo', color: 'text-rose-300 bg-rose-500/10 border-rose-500/20' };
+        } else {
+            if (session.duration >= 65) return { text: 'Volume 21K Rekor', color: 'text-amber-400 bg-amber-500/10 border-amber-500/20' };
+            return { text: 'Long Endurance', color: 'text-amber-300 bg-amber-500/10 border-amber-500/20' };
+        }
+    }
+
+    // RENDER TABLE
+    function renderTable() {
+        const tbody = document.getElementById('session-table-body');
+        tbody.innerHTML = '';
+
+        const list = getFilteredSessions();
+        document.getElementById('total-session-count').innerText = list.length;
+
+        if (list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="10" class="text-center p-8 text-slate-500">Tidak ada log data yang ditemukan.</td></tr>`;
+            return;
+        }
+
+        list.forEach(s => {
+            let catBadge = '';
+            if (s.category === 'STEADY') catBadge = '<span class="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-md text-[11px] font-bold border border-emerald-500/20">Steady</span>';
+            else if (s.category === 'TEMPO') catBadge = '<span class="px-2 py-1 bg-rose-500/10 text-rose-400 rounded-md text-[11px] font-bold border border-rose-500/20">Tempo</span>';
+            else catBadge = '<span class="px-2 py-1 bg-amber-500/10 text-amber-400 rounded-md text-[11px] font-bold border border-amber-500/20">Long</span>';
+
+            const zone = getZoneStatus(s);
+
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-slate-800/40 transition-colors group';
+            tr.innerHTML = `
+                <td class="p-3">${catBadge}</td>
+                <td class="p-3 font-semibold text-white">
+                    ${s.session} 
+                    <div class="text-[10px] text-slate-500 font-mono">${s.file || '-'} ${s.note ? '• ' + s.note : ''}</div>
+                </td>
+                <td class="p-3 font-medium">${s.duration} Mnt</td>
+                <td class="p-3 font-semibold text-cyan-400">${s.avgSpeed} km/h</td>
+                <td class="p-3 font-semibold text-amber-400">${s.maxSpeed} km/h</td>
+                <td class="p-3 font-semibold text-emerald-400">${s.avgHr} bpm</td>
+                <td class="p-3 text-rose-400">${s.maxHr} bpm</td>
+                <td class="p-3 font-medium">${s.cadence || '-'} spm</td>
+                <td class="p-3">
+                    <span class="px-2 py-0.5 rounded border text-[10px] font-medium ${zone.color}">${zone.text}</span>
+                </td>
+                <td class="p-3 text-center">
+                    <button onclick="deleteSession(${s.id})" title="Hapus Log" class="text-slate-600 hover:text-rose-400 p-1 transition-colors">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // DELETE SESSION
+    function deleteSession(id) {
+        if (confirm('Hapus log sesi latihan ini?')) {
+            sessions = sessions.filter(s => s.id !== id);
+            saveToStorage();
+            refreshAppUI();
+        }
+    }
+
+    // RENDER CHARTS
+    function renderCharts() {
+        const list = getFilteredSessions();
+        const labels = list.map(s => s.session.replace(' Endurance', '').replace(' Base', ''));
+
+        // DESTROY PREVIOUS INSTANCES
+        if (speedHrChartInstance) speedHrChartInstance.destroy();
+        if (durationCadenceChartInstance) durationCadenceChartInstance.destroy();
+
+        // CHART 1: SPEED vs HR
+        const ctx1 = document.getElementById('speedHrChart').getContext('2d');
+        speedHrChartInstance = new Chart(ctx1, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Avg Speed (km/h)',
+                        data: list.map(s => s.avgSpeed),
+                        borderColor: '#06B6D4',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.3,
+                        yAxisID: 'ySpeed',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#06B6D4'
+                    },
+                    {
+                        label: 'Avg Heart Rate (bpm)',
+                        data: list.map(s => s.avgHr),
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        borderDash: [4, 4],
+                        tension: 0.3,
+                        yAxisID: 'yHr',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#10B981'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#94A3B8', font: { size: 11 } } }
+                },
+                scales: {
+                    x: { ticks: { color: '#94A3B8', font: { size: 10 } }, grid: { color: '#1E293B' } },
+                    ySpeed: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'Kecepatan (km/h)', color: '#06B6D4', font: { size: 11 } },
+                        ticks: { color: '#06B6D4' },
+                        grid: { color: '#1E293B' },
+                        min: 3.5,
+                        max: 6.5
+                    },
+                    yHr: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Detak Jantung (bpm)', color: '#10B981', font: { size: 11 } },
+                        ticks: { color: '#10B981' },
+                        grid: { drawOnChartArea: false },
+                        min: 100,
+                        max: 170
+                    }
+                }
+            }
+        });
+
+        // CHART 2: DURATION & CADENCE
+        const ctx2 = document.getElementById('durationCadenceChart').getContext('2d');
+        durationCadenceChartInstance = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: 'Durasi (Menit)',
+                        data: list.map(s => s.duration),
+                        backgroundColor: 'rgba(245, 158, 11, 0.5)',
+                        borderColor: '#F59E0B',
+                        borderWidth: 1,
+                        borderRadius: 6,
+                        yAxisID: 'yDuration'
+                    },
+                    {
+                        type: 'line',
+                        label: 'Avg Cadence (spm)',
+                        data: list.map(s => s.cadence),
+                        borderColor: '#8B5CF6',
+                        backgroundColor: '#8B5CF6',
+                        borderWidth: 2,
+                        tension: 0.2,
+                        yAxisID: 'yCadence',
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { labels: { color: '#94A3B8', font: { size: 11 } } }
+                },
+                scales: {
+                    x: { ticks: { color: '#94A3B8', font: { size: 10 } }, grid: { color: '#1E293B' } },
+                    yDuration: {
+                        type: 'linear',
+                        position: 'left',
+                        title: { display: true, text: 'Durasi (Menit)', color: '#F59E0B', font: { size: 11 } },
+                        ticks: { color: '#F59E0B' },
+                        grid: { color: '#1E293B' },
+                        min: 20,
+                        max: 85
+                    },
+                    yCadence: {
+                        type: 'linear',
+                        position: 'right',
+                        title: { display: true, text: 'Kadensi (spm)', color: '#8B5CF6', font: { size: 11 } },
+                        ticks: { color: '#8B5CF6' },
+                        grid: { drawOnChartArea: false },
+                        min: 80,
+                        max: 165
+                    }
+                }
+            }
+        });
+    }
+
+    // UPDATE HUD CARDS & AI INSIGHT
+    function updateSummaryCards() {
+        const steadyList = sessions.filter(s => s.category === 'STEADY');
+        const tempoList = sessions.filter(s => s.category === 'TEMPO');
+        const longList = sessions.filter(s => s.category === 'LONG');
+
+        if (steadyList.length) {
+            const latest = steadyList[steadyList.length - 1];
+            document.getElementById('card-steady-hr').innerText = `${latest.avgHr} bpm`;
+        }
+
+        if (tempoList.length) {
+            const maxSpeedTempo = Math.max(...tempoList.map(s => s.maxSpeed));
+            document.getElementById('card-tempo-peak').innerText = `${maxSpeedTempo} km/h`;
+        }
+
+        if (longList.length) {
+            const maxDur = Math.max(...longList.map(s => s.duration));
+            document.getElementById('card-long-dur').innerText = `${maxDur} Mnt`;
+        }
+
+        // AI INSIGHT CONTENT
+        const aiContainer = document.getElementById('ai-coach-content');
+        aiContainer.innerHTML = `
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-cardborder">
+                <span class="font-bold text-emerald-400 block mb-1"><i class="fa-solid fa-square-check mr-1"></i> Shift Efisiensi Aerobik</span>
+                <p class="text-slate-300">Jantung Anda kini stabil di <strong>119-123 bpm</strong> untuk kecepatan <strong>5.3 km/h</strong>. Efisiensi daya pancing oksigen Anda naik +23% dibanding awal program.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-cardborder">
+                <span class="font-bold text-rose-400 block mb-1"><i class="fa-solid fa-fire mr-1"></i> Kapasitas Ambang Laktat</span>
+                <p class="text-slate-300">Tempo 6 berhasil memecahkan rekor kecepatan <strong>5.8 km/h</strong> & kadensi <strong>149 spm</strong>. Paru-paru & otot makin tangguh di Zona 3-4.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-cardborder">
+                <span class="font-bold text-amber-400 block mb-1"><i class="fa-solid fa-compass mr-1"></i> Target Sesi Berikutnya</span>
+                <p class="text-slate-300">Kunci durasi <strong>Long Endurance ke 70-75 Mnt</strong> dengan speed 5.0-5.2 km/h. Jaga hidrasi & nutrisi makro untuk pemulihan sendi.</p>
+            </div>
+        `;
+    }
+
+    function refreshAppUI() {
+        renderTable();
+        renderCharts();
+        updateSummaryCards();
+    }
+
+    // MODAL HANDLERS
+    function openModal() {
+        document.getElementById('session-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+        document.getElementById('session-modal').classList.add('hidden');
+        document.getElementById('add-session-form').reset();
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+
+        const category = document.getElementById('input-category').value;
+        const title = document.getElementById('input-title').value;
+        const file = document.getElementById('input-file').value;
+        const duration = parseFloat(document.getElementById('input-duration').value);
+        const avgSpeed = parseFloat(document.getElementById('input-avg-speed').value);
+        const maxSpeed = parseFloat(document.getElementById('input-max-speed').value);
+        const avgHr = parseInt(document.getElementById('input-avg-hr').value);
+        const maxHr = parseInt(document.getElementById('input-max-hr').value);
+        const cadence = parseInt(document.getElementById('input-cadence').value);
+        const note = document.getElementById('input-note').value;
+
+        const newSession = {
+            id: Date.now(),
+            category,
+            session: title,
+            file: file || 'Manual Input',
+            duration,
+            avgSpeed,
+            maxSpeed,
+            avgHr,
+            maxHr,
+            cadence,
+            note
+        };
+
+        sessions.push(newSession);
+        saveToStorage();
+        refreshAppUI();
+        closeModal();
+    }
+
+    // INIT ON LOAD
+    window.addEventListener('DOMContentLoaded', () => {
+        initData();
+    });
+</script>
+
+<script>
+    // PWA registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('PWA service worker registered:', reg.scope))
+                .catch(err => console.error('PWA service worker registration failed:', err));
+        });
+    }
+
+    let deferredInstallPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        const btn = document.getElementById('install-app-btn');
+        if (btn) btn.classList.remove('hidden');
+    });
+
+    async function installPWA() {
+        if (!deferredInstallPrompt) return;
+        deferredInstallPrompt.prompt();
+        await deferredInstallPrompt.userChoice;
+        deferredInstallPrompt = null;
+        const btn = document.getElementById('install-app-btn');
+        if (btn) btn.classList.add('hidden');
+    }
+
+    window.addEventListener('appinstalled', () => {
+        const btn = document.getElementById('install-app-btn');
+        if (btn) btn.classList.add('hidden');
+        console.log('CardioTracker berhasil di-install.');
+    });
+</script>
+</body>
+</html>
